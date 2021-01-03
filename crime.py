@@ -6,8 +6,9 @@ import matplotlib.pyplot as plt
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/Toughbook/Downloads/My First Project-332dd775751a.json"
 
 def graph(crimes_per_year):
-    bucket_size = 5000
-    buckets = bucket_size*np.arange(2,8)
+    bucket_size = 1000
+    buckets = bucket_size*np.arange(10,60)
+
     crimes_per_year_buckets = {i:[] for i in buckets}
     for num_crimes in crimes_per_year.values():
         key = min(j for j in buckets if j>num_crimes)
@@ -17,7 +18,7 @@ def graph(crimes_per_year):
     for arr in crimes_per_year_buckets.values():
         frequencies.append(len(arr))
 
-    plt.plot([10000,15000,20000,25000,30000,35000], frequencies)
+    plt.bar(np.arange(len(crimes_per_year_buckets.keys())), frequencies)
     plt.show()
 
 
@@ -25,20 +26,20 @@ def main():
     client = bigquery.Client()
 
     query_job = client.query(
-        """SELECT year, COUNT(year)
+        """SELECT year, EXTRACT(MONTH from date), count(EXTRACT(MONTH from date))
         FROM `bigquery-public-data.chicago_crime.crime`
-        WHERE district = 4 
-        GROUP by year
+        GROUP by year, EXTRACT(MONTH from date)
         """)
 
     results = query_job.result()
 
-    crimes_per_year = {}
+    occurences_per_month = {}
     for row in results:
-        crimes_per_year[row[0]] = row[1]
+        occurences_per_month[(row[0],row[1])] = row[2]
+        #print(row)
 
-
-    graph(crimes_per_year)
+    #WHERE district = 16
+    graph(occurences_per_month)
 
 
 main()
